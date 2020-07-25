@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/nav_graph.xml"
+    app:startDestination="@id/initFragment">
+    <fragment
+        android:id="@+id/initFragment"
+        android:name="com.example.taskmanager.InitFragment"
+        android:label="InitFragment" >
+        <action
+            android:id="@+id/action_initFragment_to_taskFragment"
+            app:destination="@id/taskFragment"
+            app:popUpTo="@+id/initFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/taskFragment"
+        android:name="com.example.taskmanager.task.TaskFragment"
+        android:label="taskFragment" >
+        <action
+            android:id="@+id/action_taskFragment_self"
+            app:destination="@id/taskFragment" />
+        <argument
+            android:name="id"
+            app:argType="long" />
+    </fragment>
+
+</navigation>
