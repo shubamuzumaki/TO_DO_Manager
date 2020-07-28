@@ -19,10 +19,6 @@ import com.example.taskmanager.database.TaskDatabase
 import com.example.taskmanager.databinding.FragmentTaskBinding
 import android.view.WindowManager
 
-
-
-
-
 class TaskFragment : Fragment() {
 
     lateinit var binding:FragmentTaskBinding
@@ -43,31 +39,55 @@ class TaskFragment : Fragment() {
 
         val arguments = TaskFragmentArgs.fromBundle(requireArguments())
 
-        //viewmodel
+        initViewModel(arguments)
+
+        initRecylerView()
+
+        initDialog()
+
+        setObservers()
+
+        setHasOptionsMenu(true)
+
+        //fab animations
+        growAnimation = AnimationUtils.loadAnimation(this.context,R.anim.simple_grow)
+        shrinkAnimation = AnimationUtils.loadAnimation(this.context,R.anim.simple_shrink)
+        binding.fab.startAnimation(growAnimation)
+
+        return binding.root
+    }
+
+    //----------------------[INIT VIEWMODEL]---------------
+    private fun initViewModel(arguments: TaskFragmentArgs) {
         val application = requireNotNull(this.activity).application
 
-        val viewModelFactory = TaskViewModelFactory(arguments.id, TaskDatabase.getInstance(application).taskDao)
+        val viewModelFactory =
+            TaskViewModelFactory(arguments.id, TaskDatabase.getInstance(application).taskDao)
 
         taskViewModel = ViewModelProvider(this, viewModelFactory).get(TaskViewModel::class.java)
 
         binding.viewModel = taskViewModel
 
         binding.setLifecycleOwner(this)
+    }
 
-        adapter = TaskAdapter(TaskListener(
-            {task->
-                taskViewModel.onTaskItemClicked(task)
-            },
-            {task ->
-                taskViewModel.ontoggleButtonClicked(task)
-//                Toast.makeText(this.context,"desc: ${task.description} \nstate: ${task.progress}", Toast.LENGTH_SHORT).show()
-            }))
+    //----------------------[INIT RECYLERVIEW]---------------
+    private fun initRecylerView() {
+        adapter = TaskAdapter(
+            TaskListener(
+                { task ->
+                    taskViewModel.onTaskItemClicked(task)
+                },
+                { task ->
+                    taskViewModel.ontoggleButtonClicked(task)
+                })
+        )
 
         //recylerview
         binding.recylerView.adapter = adapter
 
-        val itemTouchHelperCallback = object:
-            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)){
+        val itemTouchHelperCallback = object :
+            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -77,30 +97,51 @@ class TaskFragment : Fragment() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                Log.i("@TaskAdater","onSwiped")
-            }
+                val position = viewHolder.adapterPosition
+                Log.i("@TaskAdapter", "onSwiped : ${adapter.getItemFromAdapter(position)}")
 
+                taskViewModel.removeTask(adapter.getItemFromAdapter(position))
+            }
         }
 
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.recylerView)
-
-        setHasOptionsMenu(true)
-
-        initDialog()
-        setObservers()
-
-        //fab animations
-        growAnimation = AnimationUtils.loadAnimation(this.context,R.anim.simple_grow)
-        shrinkAnimation = AnimationUtils.loadAnimation(this.context,R.anim.simple_shrink)
-        binding.fab.startAnimation(growAnimation)
-
-
-        return binding.root
     }
 
+    //----------------------[INIT DIALOG]---------------
+    private fun initDialog() {
+        val builder = AlertDialog.Builder(this.context)
+        val inflater = requireActivity().layoutInflater
+        val view: View = inflater.inflate(R.layout.dialog_add_task, null)
+        val taskDesriptionEditText: EditText = view.findViewById(R.id.task_description_et)
+
+        builder.setView(view)
+            .setPositiveButton("ADD") { dialog, id ->
+                if(taskDesriptionEditText.text.isNotEmpty()){
+                    taskViewModel.insertTask(taskDesriptionEditText.text.toString())
+                    taskDesriptionEditText.setText("")
+                }
+            }
+
+
+
+        addTaskDialog = builder.create()
+        addTaskDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val wmlp = addTaskDialog.getWindow()
+        wmlp?.setGravity(Gravity.BOTTOM)
+        wmlp?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+
+        val lp:WindowManager.LayoutParams? = wmlp?.attributes
+        lp?.x = 0
+        lp?.y = 0
+        wmlp?.attributes = lp
+    }
+
+    //----------------------[SET OBSERVERS]---------------
     private fun setObservers() {
         taskViewModel.tasks.observe(viewLifecycleOwner, Observer {
             it?.let {
+                if(!it.isNotEmpty())
+                    setHasOptionsMenu(false)
                 adapter.submitList(it)
             }
         })
@@ -125,30 +166,8 @@ class TaskFragment : Fragment() {
         })
     }
 
-    private fun initDialog() {
-        val builder = AlertDialog.Builder(this.context)
-        val inflater = requireActivity().layoutInflater
-        val view: View = inflater.inflate(R.layout.dialog_add_task, null)
-        val taskDesriptionEditText: EditText = view.findViewById(R.id.task_description_et)
 
-        builder.setView(view)
-            .setPositiveButton("ADD") { dialog, id ->
-                if(taskDesriptionEditText.text.isNotEmpty()){
-                    taskViewModel.insertTask(taskDesriptionEditText.text.toString())
-                    taskDesriptionEditText.setText("")
-                }
-            }
-
-
-
-        addTaskDialog = builder.create()
-        addTaskDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val wmlp = addTaskDialog.getWindow()
-        wmlp?.setLayout(WindowManager.LayoutParams.FILL_PARENT, WindowManager.LayoutParams.FILL_PARENT)
-        wmlp?.setGravity(Gravity.BOTTOM)
-        wmlp?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-    }
-
+    //----------------------[OPTIONS MENU]---------------
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.overflow_menu, menu)

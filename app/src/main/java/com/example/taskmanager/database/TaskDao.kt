@@ -20,6 +20,9 @@ interface TaskDao{
     @Update
     fun update(child: Child)
 
+    @Delete
+    fun delete(task:Task)
+
     @Query("UPDATE task_table SET progress=:progress WHERE taskId=:taskId")
     fun updateProgress(taskId:Long, progress:Long)
 

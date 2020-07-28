@@ -53,12 +53,13 @@ class TaskRepository (private val parentTaskId:Long, private val taskDao: TaskDa
     }
 
     @WorkerThread
-    suspend fun insert(task: Task){
+    suspend fun insert(task: Task) : Long =
         withContext(Dispatchers.IO){
             val id = insertTask(task)
             insertChild(Child(id, parentTaskId))
-        }
+            id
     }
+
     @WorkerThread
     suspend fun clearTasks(){
         withContext(Dispatchers.IO){
@@ -99,10 +100,17 @@ class TaskRepository (private val parentTaskId:Long, private val taskDao: TaskDa
 
         _calculateAndUpdateProgress(taskDao.getParentTaskId(parentTaskId))
     }
+
     @WorkerThread
     suspend fun getTask(taskId: Long) =
         withContext(Dispatchers.IO){
             taskDao.getTask(taskId)
-        }
+    }
+
+    @WorkerThread
+    suspend fun removeTask(task: Task) = withContext(Dispatchers.IO){
+        taskDao.delete(task)
+        Log.i("@TaskRepository","deleteTask : ${task}")
+    }
 
 }

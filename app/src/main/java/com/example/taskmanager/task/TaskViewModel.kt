@@ -1,6 +1,7 @@
 package com.example.taskmanager.task
 
 import android.util.Log
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.*
 import com.example.taskmanager.ROOT_TASK_ID
 import com.example.taskmanager.database.Child
@@ -89,7 +90,6 @@ class TaskViewModel(
 
     fun onProgressChanged(){
         progressUpdaterJob?.cancel()
-        Log.i(TAG,"@onProgressChanged")
         progressUpdaterJob = uiScope.launch {
             repository.updateProgress(ROOT_TASK_ID, -parentTaskId)
 
@@ -100,8 +100,18 @@ class TaskViewModel(
 
     }
 
+    fun removeTask(task:Task?){
+        task?.let {
+            uiScope.launch {
+                repository.removeTask(task)
+                onProgressChanged()
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
+        Log.i(TAG,"cancelled")
     }
 }

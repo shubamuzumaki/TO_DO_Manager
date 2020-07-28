@@ -8,13 +8,12 @@
         android:layout_height="match_parent">
 
 
-        <TextView
+        <com.example.taskmanager.database.util.MyGradientTextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="WELCOME"
             android:textSize="58sp"
-            android:textColor="@color/colorAccent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

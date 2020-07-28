@@ -11,8 +11,8 @@
 
     <!-- ActionBar styles -->
     <style name="MyActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
-        <item name="android:background">@drawable/toggle_on</item>
+        <item name="android:background">@drawable/action_bar_bg</item>
         <!-- Support library compatibility -->
-        <item name="background">@drawable/toggle_on</item>
+        <item name="background">@drawable/action_bar_bg</item>
     </style>
 </resources>

@@ -9,10 +9,11 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taskmanager.database.Task
+import com.example.taskmanager.database.util.TaskTouchHelperAdapter
 import com.example.taskmanager.databinding.ListItemTaskBinding
 
-class TaskAdapter(val clickListener: TaskListener): ListAdapter<Task, TaskAdapter.ViewHolder>(TaskDiffCallback()){
-
+class TaskAdapter(val clickListener: TaskListener):
+    ListAdapter<Task, TaskAdapter.ViewHolder>(TaskDiffCallback()){
 
     //how to create
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskAdapter.ViewHolder {
@@ -24,6 +25,8 @@ class TaskAdapter(val clickListener: TaskListener): ListAdapter<Task, TaskAdapte
         val item = getItem(position)
         holder.bind(item, clickListener)
     }
+
+    fun getItemFromAdapter(position: Int):Task? = getItem(position)
 
     class ViewHolder(val binding:ListItemTaskBinding)
         :RecyclerView.ViewHolder(binding.root){
