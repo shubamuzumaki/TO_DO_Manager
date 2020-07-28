@@ -16,13 +16,17 @@ class TaskViewModel(
 
     companion object{
         val TAG = "@TaskViewModel"
+        val MAXIMUM_DEPTH_ALLOWED = 5
     }
 
-    val repository = TaskRepository(parentTaskId, taskDao)
-    val tasks:LiveData<List<Task>> = repository.allTasks
 
-    val viewModelJob = Job()
-    val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
+    private val repository = TaskRepository(parentTaskId, taskDao)
+    val tasks:LiveData<List<Task>> = repository.allTasks
+    private  var parentDepth = 0
+
+    private val viewModelJob = Job()
+    private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
+    private var progressUpdaterJob:Job? = null
 
     private val _openAddTaskDialog = MutableLiveData<Boolean>()
     val openAddTaskDialog :LiveData<Boolean>
@@ -32,31 +36,15 @@ class TaskViewModel(
     val navigateToSelf :LiveData<Long>
         get() = _navigateToSelf
 
-//    val isComposite:LiveData<Boolean> = Transformations.distinctUntilChanged(
-//        Transformations.map(tasks){ list ->
-//        !(list?.isEmpty() ?: true)
-//    })
-
-    val parentProgressAvg:LiveData<Int> = Transformations.distinctUntilChanged(
-        Transformations.map(repository.totalProgress){
-            var totalCount = tasks.value?.size ?: 1
-            totalCount = if(totalCount == 0) 1 else totalCount
-            if(it != null){
-                it/totalCount
-            }
-            else
-                totalCount
-        }
-    )
-
-    fun updateParentProgress(newProgress:Int){
-        viewModelScope.launch {
-            repository.updateProgress(parentTaskId, newProgress)
+    init {
+        uiScope.launch(Dispatchers.IO) {
+            val parent = repository.getTask(parentTaskId)
+            parentDepth = parent?.depth ?: 0
         }
     }
 
     fun updateParentComposite(isComposite:Boolean){
-        viewModelScope.launch {
+        uiScope.launch {
             repository.updateisComposite(isComposite)
         }
     }
@@ -68,29 +56,48 @@ class TaskViewModel(
         _openAddTaskDialog.value = false
     }
 
-    fun onTaskItemClicked(taskId: Long){
-        _navigateToSelf.value = taskId
+    fun onTaskItemClicked(task: Task){
+        if(task.depth <= MAXIMUM_DEPTH_ALLOWED){
+            _navigateToSelf.value = task.taskId
+        }
     }
+
     fun onNavigationToSelfCompleted(){
         _navigateToSelf.value = null
     }
 
-    fun clearChildTasks() = viewModelScope.launch{
+    fun clearChildTasks() = uiScope.launch{
         repository.clearTasks()
         updateParentComposite(false)
+        onProgressChanged()
 //        repository.clearAll() //debug
     }
 
-    fun insertTask(description:String) = viewModelScope.launch {
-        repository.insert(Task(description = description))
+    fun insertTask(description:String) = uiScope.launch {
+        repository.insert(Task(description = description, depth = parentDepth+1))
         updateParentComposite(true)
+        onProgressChanged()
     }
 
     fun ontoggleButtonClicked(task: Task){
-        val newProgress = if(task.progress == 0) 100 else 0
-        viewModelScope.launch {
+        val newProgress = if(task.progress == 0L) 100L else 0L
+        uiScope.launch {
             repository.updateProgress(task.taskId, newProgress)
         }
+        onProgressChanged()
+    }
+
+    fun onProgressChanged(){
+        progressUpdaterJob?.cancel()
+        Log.i(TAG,"@onProgressChanged")
+        progressUpdaterJob = uiScope.launch {
+            repository.updateProgress(ROOT_TASK_ID, -parentTaskId)
+
+            repository.calculateAndUpdateProgress(parentTaskId)
+
+            repository.updateProgress(ROOT_TASK_ID, 0L)
+        }
+
     }
 
     override fun onCleared() {

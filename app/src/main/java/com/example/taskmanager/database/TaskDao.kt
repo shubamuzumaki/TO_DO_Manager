@@ -21,7 +21,7 @@ interface TaskDao{
     fun update(child: Child)
 
     @Query("UPDATE task_table SET progress=:progress WHERE taskId=:taskId")
-    fun updateProgress(taskId:Long, progress:Int)
+    fun updateProgress(taskId:Long, progress:Long)
 
     @Query("UPDATE task_table SET composite=:isComposite WHERE taskId=:taskId")
     fun updateisComposite(taskId:Long, isComposite:Int)
@@ -47,9 +47,15 @@ interface TaskDao{
     fun getTask(rootTaskId:Long):Task?
 
     @Query("SELECT SUM(progress) FROM task_table where taskId in (SELECT child_id from child_table where parent_id = :parentTaskId)")
-    fun getTotalProgress(parentTaskId:Long):LiveData<Int>
+    fun getChildProgressSum(parentTaskId:Long):Long
+
+    @Query("SELECT COUNT(*) FROM task_table where taskId in (SELECT child_id from child_table where parent_id = :parentTaskId)")
+    fun getChildCount(parentTaskId: Long):Long
+
+
+    @Query("SELECT parent_id FROM child_table where child_id= :childId")
+    fun getParentTaskId(childId: Long):Long
 
     @RawQuery
     fun insertRecords(query: SupportSQLiteQuery): Boolean
-
 }

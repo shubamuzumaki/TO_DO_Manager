@@ -12,6 +12,7 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.example.taskmanager.database.TaskDatabase
 import com.example.taskmanager.database.TaskDao
 import com.example.taskmanager.databinding.FragmentInitBinding
+import com.example.taskmanager.task.TaskRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,16 +43,26 @@ class InitFragment : Fragment() {
 
         CoroutineScope(Dispatchers.Main).launch {
             tryInsertRootTask(datasource)
-
+            validateDatabase(datasource)
             this@InitFragment.findNavController().navigate(
                 InitFragmentDirections.actionInitFragmentToTaskFragment(ROOT_TASK_ID)
             )
         }
     }
 
-    suspend fun tryInsertRootTask(datasource:TaskDao) {
+    private suspend fun validateDatabase(datasource: TaskDao) {
         withContext(Dispatchers.IO){
-            val id = datasource.insertRecords(SimpleSQLiteQuery("INSERT OR IGNORE INTO task_table VALUES(${ROOT_TASK_ID}, \"${ROOT_TASK_NAME}\", 1, 0);"))
+            val rootTask = datasource.getTask(ROOT_TASK_ID)
+            if(rootTask != null && rootTask.progress < 0) {
+                TaskRepository(ROOT_TASK_ID, datasource).calculateAndUpdateProgress(-rootTask.progress)
+            }
+        }
+
+    }
+
+    private suspend fun tryInsertRootTask(datasource:TaskDao) {
+        withContext(Dispatchers.IO){
+            val id = datasource.insertRecords(SimpleSQLiteQuery("INSERT OR IGNORE INTO task_table VALUES(${ROOT_TASK_ID}, \"${ROOT_TASK_NAME}\", 1, 0, 0);"))
 //            Log.i("SHARMA", "root task inserted successfully: ${id}")
         }
     }

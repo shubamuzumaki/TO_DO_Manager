@@ -19,7 +19,10 @@ data class Task(
     val isComposite: Boolean = false,
 
     @ColumnInfo(name= "progress")
-    val progress:Int = 0
+    val progress:Long = 0,
+
+    @ColumnInfo(name="depth")
+    val depth:Int
 )
 
 @Entity(tableName = "child_table",

@@ -5,12 +5,14 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taskmanager.database.Task
 import com.example.taskmanager.databinding.ListItemTaskBinding
 
 class TaskAdapter(val clickListener: TaskListener): ListAdapter<Task, TaskAdapter.ViewHolder>(TaskDiffCallback()){
+
 
     //how to create
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskAdapter.ViewHolder {
@@ -52,8 +54,8 @@ class TaskDiffCallback:DiffUtil.ItemCallback<Task>(){
     }
 }
 
-class TaskListener(val clickListener:(taskId:Long) -> Unit,
+class TaskListener(val clickListener:(task: Task) -> Unit,
                    val toggleListener:(task: Task)->Unit){
-    fun onClick(task: Task) = clickListener(task.taskId)
+    fun onClick(task: Task) = clickListener(task)
     fun onToggleButtonClicked(task: Task) = toggleListener(task)
 }

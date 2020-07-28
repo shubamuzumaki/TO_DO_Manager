@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimary">#00897B</color>
     <color name="colorPrimaryDark">#00574B</color>
     <!--    <color name="colorAccent">#D81B60</color>-->
     <color name="colorAccent">#726868</color>
 
     <color name="colorBlack">#000000</color>
 
-    <color name="gradientStart">#00ACC1</color>
-    <color name="gradientCentre">#F4511E</color>
-    <color name="gradientEnd">#00ACC1</color>
+    <color name="gradientStart">#1E88E5</color>
+    <color name="gradientCentre">#00ACC1</color>
+    <color name="gradientEnd">#039BE5</color>
 </resources>

@@ -2,16 +2,25 @@ package com.example.taskmanager.task
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.*
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.EditText
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.example.taskmanager.R
 import com.example.taskmanager.database.TaskDatabase
 import com.example.taskmanager.databinding.FragmentTaskBinding
+import android.view.WindowManager
+
+
+
 
 
 class TaskFragment : Fragment() {
@@ -20,6 +29,9 @@ class TaskFragment : Fragment() {
     lateinit var taskViewModel:TaskViewModel
     lateinit var adapter:TaskAdapter
     lateinit var addTaskDialog:AlertDialog
+
+    lateinit var growAnimation:Animation
+    lateinit var shrinkAnimation:Animation
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,8 +55,8 @@ class TaskFragment : Fragment() {
         binding.setLifecycleOwner(this)
 
         adapter = TaskAdapter(TaskListener(
-            {taskId->
-                taskViewModel.onTaskItemClicked(taskId)
+            {task->
+                taskViewModel.onTaskItemClicked(task)
             },
             {task ->
                 taskViewModel.ontoggleButtonClicked(task)
@@ -54,10 +66,34 @@ class TaskFragment : Fragment() {
         //recylerview
         binding.recylerView.adapter = adapter
 
+        val itemTouchHelperCallback = object:
+            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)){
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                Log.i("@TaskAdater","onSwiped")
+            }
+
+        }
+
+        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.recylerView)
+
         setHasOptionsMenu(true)
 
         initDialog()
         setObservers()
+
+        //fab animations
+        growAnimation = AnimationUtils.loadAnimation(this.context,R.anim.simple_grow)
+        shrinkAnimation = AnimationUtils.loadAnimation(this.context,R.anim.simple_shrink)
+        binding.fab.startAnimation(growAnimation)
+
 
         return binding.root
     }
@@ -80,22 +116,11 @@ class TaskFragment : Fragment() {
 
         taskViewModel.navigateToSelf.observe(viewLifecycleOwner, Observer {
             it?.let { taskId->
+                binding.fab.startAnimation(shrinkAnimation)
                 this.findNavController().navigate(
                     TaskFragmentDirections.actionTaskFragmentSelf(taskId)
                 )
                 taskViewModel.onNavigationToSelfCompleted()
-            }
-        })
-
-//        taskViewModel.isComposite.observe(viewLifecycleOwner, Observer {
-//            if(it != null){
-//                taskViewModel.updateParentComposite(it)
-//            }
-//        })
-
-        taskViewModel.parentProgressAvg.observe(viewLifecycleOwner, Observer {
-            it?.let {
-                taskViewModel.updateParentProgress(it)
             }
         })
     }
@@ -113,9 +138,13 @@ class TaskFragment : Fragment() {
                     taskDesriptionEditText.setText("")
                 }
             }
+
+
+
         addTaskDialog = builder.create()
         addTaskDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         val wmlp = addTaskDialog.getWindow()
+        wmlp?.setLayout(WindowManager.LayoutParams.FILL_PARENT, WindowManager.LayoutParams.FILL_PARENT)
         wmlp?.setGravity(Gravity.BOTTOM)
         wmlp?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     }

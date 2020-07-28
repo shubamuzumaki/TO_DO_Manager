@@ -15,10 +15,12 @@
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
-            android:src="@drawable/white_add"
+            android:src="@drawable/custom_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
+            app:rippleColor="@null"
+            app:backgroundTint="@null"
             android:onClick="@{()->viewModel.onFabClicked()}"
             android:layout_marginBottom="32dp"
             app:layout_constraintBottom_toBottomOf="parent"

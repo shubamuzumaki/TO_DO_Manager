@@ -16,6 +16,7 @@
         android:layout_marginBottom="16dp"
         android:background="@null"
         android:hint="New Task"
+        android:inputType="textCapSentences"
         android:textSize="18sp"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
