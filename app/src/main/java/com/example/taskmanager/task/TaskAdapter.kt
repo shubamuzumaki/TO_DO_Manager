@@ -1,3 +1,5 @@
+//Project by Shubham sharma -  To do manager
+
 package com.example.taskmanager.task
 
 import android.text.method.MultiTapKeyListener
@@ -62,3 +64,5 @@ class TaskListener(val clickListener:(task: Task) -> Unit,
     fun onClick(task: Task) = clickListener(task)
     fun onToggleButtonClicked(task: Task) = toggleListener(task)
 }
+
+
